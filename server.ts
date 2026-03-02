@@ -869,6 +869,14 @@ async function startServer() {
       }
     })();
     
+    // Baris ini yang akan memicu notifikasi di HP Customer
+    broadcast({ 
+      type: "ORDER_STATUS_CHANGED", 
+      orderId: id, 
+      status: status 
+    });
+    // ---------------------------
+
     broadcast({ type: "ORDER_UPDATED", orderId: id, status, paymentMethod });
     res.json({ success: true });
   });
