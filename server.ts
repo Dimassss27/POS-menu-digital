@@ -266,29 +266,6 @@ async function startServer() {
   };
 
   // API Routes
-  app.put("/api/cashier/order-items/:id/status", (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
-    try {
-      db.prepare("UPDATE order_items SET status = ? WHERE id = ?").run(status, id);
-      
-      // Check if all items in the order are served
-      const item = db.prepare("SELECT order_id FROM order_items WHERE id = ?").get(id) as { order_id: number };
-      const unservedItems = db.prepare("SELECT COUNT(*) as count FROM order_items WHERE order_id = ? AND status != 'served'").get(item.order_id) as { count: number };
-      
-      if (unservedItems.count === 0) {
-        db.prepare("UPDATE orders SET status = 'served' WHERE id = ?").run(item.order_id);
-      } else {
-        db.prepare("UPDATE orders SET status = 'pending' WHERE id = ?").run(item.order_id);
-      }
-
-      broadcast({ type: "ORDER_UPDATED" });
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ success: false, message: "Gagal memperbarui status item" });
-    }
-  });
-
   app.delete("/api/cashier/order-items/:id", (req, res) => {
     const { id } = req.params;
     try {
@@ -639,8 +616,10 @@ async function startServer() {
       
       if (unservedItems.count === 0) {
         db.prepare("UPDATE orders SET status = 'served' WHERE id = ?").run(item.order_id);
+        broadcast({ type: "ORDER_STATUS_CHANGED", orderId: item.order_id, status: 'served' });
       } else {
         db.prepare("UPDATE orders SET status = 'pending' WHERE id = ?").run(item.order_id);
+        broadcast({ type: "ORDER_STATUS_CHANGED", orderId: item.order_id, status: 'pending' });
       }
 
       broadcast({ type: "ORDER_UPDATED" });
@@ -684,6 +663,16 @@ async function startServer() {
     } catch (error) {
       console.error("Error updating quantity:", error);
       res.status(500).json({ success: false, message: "Gagal memperbarui jumlah item" });
+    }
+  });
+
+  app.get("/api/orders/:id", (req, res) => {
+    const { id } = req.params;
+    const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(id);
+    if (order) {
+      res.json(order);
+    } else {
+      res.status(404).json({ success: false, message: "Order not found" });
     }
   });
 

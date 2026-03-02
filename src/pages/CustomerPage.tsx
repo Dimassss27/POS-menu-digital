@@ -9,7 +9,10 @@ import {
   ChevronUp,
   ChevronDown,
   Store,
-  Clock
+  Clock,
+  Bell,
+  BellRing,
+  Coffee
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -48,8 +51,24 @@ export default function CustomerPage() {
   const [showCartDetails, setShowCartDetails] = useState(false);
   const [shopStatus, setShopStatus] = useState<'online' | 'offline'>('online');
   const [categories, setCategories] = useState<string[]>(['Semua']);
+  const [activeOrder, setActiveOrder] = useState<{id: number, status: string} | null>(null);
 
   useEffect(() => {
+    const savedOrder = localStorage.getItem('activeOrder');
+    if (savedOrder) {
+      const parsed = JSON.parse(savedOrder);
+      fetch(`/api/orders/${parsed.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.status !== 'paid') {
+            setActiveOrder({ id: data.id, status: data.status });
+          } else {
+            localStorage.removeItem('activeOrder');
+          }
+        })
+        .catch(() => localStorage.removeItem('activeOrder'));
+    }
+
     fetch('/api/menu')
       .then(res => res.json())
       .then(setMenu);
@@ -78,9 +97,29 @@ export default function CustomerPage() {
             setCategories(['Semua', ...catNames]);
           });
       }
+      if (data.type === 'ORDER_STATUS_CHANGED') {
+        const savedOrder = localStorage.getItem('activeOrder');
+        if (savedOrder) {
+          const parsed = JSON.parse(savedOrder);
+          if (data.orderId === parsed.id) {
+            setActiveOrder({ id: data.orderId, status: data.status });
+            if (data.status === 'served') {
+              playNotification();
+              if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200]);
+              }
+            }
+          }
+        }
+      }
     };
     return () => ws.close();
   }, []);
+
+  const playNotification = () => {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    audio.play().catch(e => console.log('Audio play failed:', e));
+  };
 
   const fetchShopStatus = async () => {
     const res = await fetch('/api/shop-status');
@@ -128,11 +167,14 @@ export default function CustomerPage() {
           items: cart 
         })
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
         setCart([]);
         setOrderSuccess(true);
         setCustomerName('');
         setOrderNote('');
+        setActiveOrder({ id: data.orderId, status: 'pending' });
+        localStorage.setItem('activeOrder', JSON.stringify({ id: data.orderId }));
         setTimeout(() => setOrderSuccess(false), 3000);
       }
     } catch (error) {
@@ -172,6 +214,49 @@ export default function CustomerPage() {
                 Buka Kembali Besok Pagi
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Live Order Status Notification */}
+      <AnimatePresence>
+        {activeOrder && (
+          <motion.div
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            className="fixed top-4 left-4 right-4 z-[90] pointer-events-none"
+          >
+            <div className="bg-white/90 backdrop-blur-xl border border-black/5 shadow-2xl rounded-3xl p-4 flex items-center gap-4 max-w-lg mx-auto pointer-events-auto">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                activeOrder.status === 'served' 
+                  ? 'bg-emerald-500 text-white animate-bounce' 
+                  : 'bg-amber-500 text-white animate-pulse'
+              }`}>
+                {activeOrder.status === 'served' ? <BellRing size={24} /> : <Clock size={24} />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-black truncate">
+                  {activeOrder.status === 'served' ? 'Pesanan Siap Diambil!' : 'Pesanan Sedang Disiapkan'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {activeOrder.status === 'served' 
+                    ? 'Silakan menuju meja kasir untuk mengambil pesanan Anda.' 
+                    : 'Mohon tunggu sebentar ya, kami sedang meracik pesanan Anda.'}
+                </p>
+              </div>
+              {activeOrder.status === 'served' && (
+                <button 
+                  onClick={() => {
+                    setActiveOrder(null);
+                    localStorage.removeItem('activeOrder');
+                  }}
+                  className="bg-black text-white text-[10px] font-bold px-3 py-2 rounded-xl uppercase tracking-wider"
+                >
+                  Selesai
+                </button>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
