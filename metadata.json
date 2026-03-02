@@ -1,0 +1,5 @@
+{
+  "name": "Digital Menu & Cashier System",
+  "description": "A real-time digital menu system for restaurants where customers can order from their tables and cashiers can manage orders and bills.",
+  "requestFramePermissions": []
+}
