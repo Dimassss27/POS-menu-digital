@@ -998,8 +998,13 @@ async function startServer() {
     
     console.log(`[SERVER] Global Fallback for: ${url}`);
     try {
-      const rootIndex = path.resolve(__dirname, "index.html");
+      let rootIndex = path.resolve(__dirname, "index.html");
+      const distIndex = path.resolve(__dirname, "dist", "index.html");
       
+      if (process.env.NODE_ENV === "production" && fs.existsSync(distIndex)) {
+        rootIndex = distIndex;
+      }
+
       if (process.env.NODE_ENV !== "production" && (global as any).vite) {
         console.log("[SERVER] Serving Vite-transformed index.html");
         let template = fs.readFileSync(rootIndex, "utf-8");
@@ -1024,13 +1029,16 @@ async function startServer() {
 // Export for Vercel
 export const serverPromise = startServer();
 
-// Only listen if running directly (not as a Vercel function)
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+// Only listen if NOT running as a Vercel function
+if (!process.env.VERCEL) {
   serverPromise.then(({ httpServer }) => {
     const PORT = parseInt(process.env.PORT || '3000', 10);
+    console.log(`[SERVER] Attempting to listen on port ${PORT}...`);
     httpServer.listen(PORT, "0.0.0.0", () => {
-      console.log(`[SERVER] Listening on http://0.0.0.0:${PORT}`);
+      console.log(`[SERVER] SUCCESS: Listening on http://0.0.0.0:${PORT}`);
     });
+  }).catch(err => {
+    console.error("[SERVER] Failed to start listener:", err);
   });
 }
 
