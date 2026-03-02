@@ -593,8 +593,8 @@ export default function CashierPage() {
             <div className="bg-black text-white w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Lock size={32} />
             </div>
-            <h1 className="text-3xl font-black tracking-tight">ADMIN LOGIN</h1>
-            <p className="text-gray-500">WarkopGen-Z Management System</p>
+            <h1 className="text-3xl font-black tracking-tight">LOGIN</h1>
+            <p className="text-gray-500">Usaha Kopi Management System</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -642,7 +642,7 @@ export default function CashierPage() {
               <LayoutDashboard size={32} className="shrink-0" />
               CASHIER DASHBOARD
             </h1>
-            <p className="text-gray-500 font-medium text-sm md:text-base">Monitoring pesanan masuk secara real-time</p>
+            <p className="text-gray-500 font-medium text-sm md:text-base">Monitoring pesanan masuk</p>
           </div>
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <button

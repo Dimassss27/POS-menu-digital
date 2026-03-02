@@ -242,7 +242,7 @@ export default function CustomerPage() {
               <div className="bg-black text-white w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-black/20">
                 <Store size={40} />
               </div>
-              <h1 className="text-4xl font-black tracking-tight mb-4">Warkop Sedang Tutup</h1>
+              <h1 className="text-4xl font-black tracking-tight mb-4">Usaha Kopi Sedang Tutup</h1>
               <p className="text-gray-500 text-lg mb-8 leading-relaxed">
                 Terima kasih sudah berkunjung! Saat ini kami sedang beristirahat. Silakan kembali lagi nanti saat jam operasional kami.
               </p>
@@ -308,9 +308,9 @@ export default function CustomerPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-4xl sm:text-5xl font-black tracking-tight mb-2"
               >
-                WarkopGen-Z
+                Usaha Kopi
               </motion.h1>
-              <p className="text-gray-500 text-sm sm:text-base">Silakan pilih menu favorit Anda untuk pengalaman kuliner terbaik</p>
+              <p className="text-gray-500 text-sm sm:text-base">Silakan pilih menu favorit Anda</p>
             </div>
             
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar md:pb-0">
