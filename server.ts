@@ -881,6 +881,27 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  // Endpoint untuk mencari pesanan aktif berdasarkan nama customer
+  app.get("/api/orders/search/:name", (req, res) => {
+    const { name } = req.params;
+    try {
+      // Cari pesanan terbaru yang statusnya belum 'paid' (belum lunas)
+      const order = db.prepare(`
+        SELECT id, status FROM orders 
+        WHERE customer_name = ? AND status != 'paid' 
+        ORDER BY created_at DESC LIMIT 1
+      `).get(name) as { id: number, status: string } | undefined;
+
+      if (order) {
+        res.json({ success: true, order });
+      } else {
+        res.status(404).json({ success: false, message: "Pesanan tidak ditemukan" });
+      }
+    } catch (error) {
+      res.status(500).json({ success: false });
+    }
+  });
+
   app.get("/api/cashier/report", (req, res) => {
     const { startDate, endDate, month, year, status } = req.query;
     

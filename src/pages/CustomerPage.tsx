@@ -11,7 +11,8 @@ import {
   ChevronDown,
   Store,
   Clock,
-  BellRing
+  BellRing,
+  History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -51,6 +52,30 @@ export default function CustomerPage() {
   const [shopStatus, setShopStatus] = useState<'online' | 'offline'>('online');
   const [categories, setCategories] = useState<string[]>(['Semua']);
   const [activeOrder, setActiveOrder] = useState<{id: number, status: string} | null>(null);
+  const [searchName, setSearchName] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearchOrder = async () => {
+    if (!searchName.trim()) return;
+    setIsSearching(true);
+    try {
+      const res = await fetch(`/api/orders/search/${encodeURIComponent(searchName)}`);
+      const data = await res.json();
+      if (data.success) {
+        // Simpan ID pesanan agar WebSocket bisa memantau statusnya
+        localStorage.setItem('activeOrder', JSON.stringify({ id: data.order.id }));
+        setActiveOrder({ id: Number(data.order.id), status: data.order.status });
+        setSearchName(''); // Reset input
+      } else {
+        alert('Pesanan tidak ditemukan atau sudah selesai.');
+      }
+    } catch (e) {
+      alert('Gagal mencari pesanan.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
 
   useEffect(() => {
     const savedOrder = localStorage.getItem('activeOrder');
@@ -301,6 +326,36 @@ export default function CustomerPage() {
             </div>
           </div>
         </header>
+
+                {/* Bagian Cek Status Pesanan */}
+        {!activeOrder && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 bg-white p-5 rounded-3xl border border-black/5 shadow-sm"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <History size={16} className="text-gray-400" />
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sudah pesan sebelumnya?</span>
+            </div>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                placeholder="Masukkan nama Anda saat memesan..."
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="flex-1 bg-gray-50 border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-black/10 font-medium"
+              />
+              <button 
+                onClick={handleSearchOrder}
+                disabled={isSearching || !searchName.trim()}
+                className="bg-black text-white px-6 py-3 rounded-2xl text-xs font-bold hover:scale-105 active:scale-95 transition-all disabled:opacity-20"
+              >
+                {isSearching ? '...' : 'Cek Status'}
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredMenu.map((item, idx) => (
