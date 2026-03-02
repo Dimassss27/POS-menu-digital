@@ -13,6 +13,7 @@ export default function App() {
         
         {/* Cashier View on separate path */}
         <Route path="/cashier" element={<CashierPage />} />
+        <Route path="/admin" element={<CashierPage />} />
         
         {/* Fallback to Menu */}
         <Route path="*" element={<Navigate to="/" replace />} />
