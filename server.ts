@@ -181,9 +181,9 @@ try {
 
 async function startServer() {
   console.log("[SERVER] startServer() called");
+  const app = express();
+  const httpServer = createServer(app);
   try {
-    const app = express();
-    const httpServer = createServer(app);
     const wss = new WebSocketServer({ server: httpServer });
     const PORT = 3000;
 
@@ -1014,28 +1014,27 @@ async function startServer() {
       next(e);
     }
   });
-
-  } catch (error) {
+  return { app, httpServer };
+} catch (error) {
     console.error("[SERVER] FATAL ERROR DURING STARTUP:", error);
+    throw error;
   }
-  
-  return app;
 }
 
 // Export for Vercel
-export const appPromise = startServer();
+export const serverPromise = startServer();
 
 // Only listen if running directly (not as a Vercel function)
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  appPromise.then(app => {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, "0.0.0.0", () => {
+  serverPromise.then(({ httpServer }) => {
+    const PORT = parseInt(process.env.PORT || '3000', 10);
+    httpServer.listen(PORT, "0.0.0.0", () => {
       console.log(`[SERVER] Listening on http://0.0.0.0:${PORT}`);
     });
   });
 }
 
 export default async (req: any, res: any) => {
-  const app = await appPromise;
+  const { app } = await serverPromise;
   return app(req, res);
 };

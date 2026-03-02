@@ -163,7 +163,7 @@ export default function CustomerPage() {
               <div className="bg-black text-white w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-black/20">
                 <Store size={40} />
               </div>
-              <h1 className="text-4xl font-black tracking-tight mb-4">Sedang Tutup</h1>
+              <h1 className="text-4xl font-black tracking-tight mb-4">Warkop Sedang Tutup</h1>
               <p className="text-gray-500 text-lg mb-8 leading-relaxed">
                 Terima kasih sudah berkunjung! Saat ini kami sedang beristirahat. Silakan kembali lagi nanti saat jam operasional kami.
               </p>
